@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useId, useState } from 'react';
 import {
   ArrowRight,
-  ArrowUp,
   BadgeCheck,
   Banknote,
   BookOpen,
   BriefcaseBusiness,
   Building2,
-  Check,
   ChevronDown,
   Clock3,
   CreditCard,
@@ -22,7 +20,6 @@ import {
   MapPinned,
   Menu,
   MessageCircle,
-  MousePointerClick,
   Package,
   Palette,
   Pen,
@@ -38,13 +35,14 @@ import {
   Tag,
   Ticket,
   TrendingUp,
-  Users,
-  WalletCards,
   X,
 } from 'lucide-react';
 
 const whatsappUrl =
   'https://wa.me/918082590076?text=Hello%20Kashmir%20Expertise%2C%20I%20want%20to%20book%20a%20service.%20Please%20share%20availability.';
+
+const mapsUrl =
+  'https://www.google.com/maps/search/?api=1&query=Palpora+Sonwar+Srinagar+190001';
 
 const services = [
   // CSC / Government Services
@@ -139,64 +137,52 @@ const locations = [
   ['Area', 'Palpora Sonwar'],
 ];
 
-const apiKey = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
-const placeId = import.meta.env.VITE_GOOGLE_PLACE_ID || '';
-
 export default function App() {
+  const nameId = useId();
+  const phoneId = useId();
+  const serviceId = useId();
+  const messageId = useId();
   const [menuOpen, setMenuOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState(null);
   const [reviews, setReviews] = useState(testimonials);
   const [form, setForm] = useState({ name: '', phone: '', service: '', message: '' });
 
-  const handleFormSubmit = () => {
-    const text = `Hi Kashmir Expertise!%0A%0AName: ${encodeURIComponent(form.name)}%0APhone: ${encodeURIComponent(form.phone)}%0AService needed: ${encodeURIComponent(form.service)}%0AMessage: ${encodeURIComponent(form.message)}`;
-    window.open(`https://wa.me/918082590076?text=${text}`, '_blank');
+  const scrollToSection = (id) => {
+    setMenuOpen(false);
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    if (!apiKey || !placeId) return;
-    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating&key=${apiKey}`;
-    fetch(url)
-      .then(r => r.json())
-      .then(data => {
-        if (data.result?.reviews?.length) {
-          const mapped = data.result.reviews.map(r => ({
-            name: r.author_name,
-            role: '',
-            text: r.text,
-            initials: r.author_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
-            color: ['#1A56DB','#059669','#7C3AED','#DC2626','#D97706','#0891B2'][Math.floor(Math.random() * 6)],
-          }));
-          if (mapped.length) setReviews(mapped);
-        }
-      })
-      .catch(() => {});
-  }, []);
+  const handleFormSubmit = (event) => {
+    event?.preventDefault();
+    const text = `Hi Kashmir Expertise!%0A%0AName: ${encodeURIComponent(form.name)}%0APhone: ${encodeURIComponent(form.phone)}%0AService needed: ${encodeURIComponent(form.service)}%0AMessage: ${encodeURIComponent(form.message)}`;
+    window.open(`https://wa.me/918082590076?text=${text}`, '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div>
       {/* ─── NAV ─── */}
-      <nav className="nav">
-        <div className="nav-logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} style={{ cursor: 'pointer' }}>
+      <nav className="nav" aria-label="Primary navigation">
+        <button className="nav-logo" type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
           <div className="logo-mark"><Building2 size={16} /></div>
           <span>Kashmir <em>Expertise</em></span>
-        </div>
-        <div className={`nav-links${menuOpen ? ' open' : ''}`}>
-          <a onClick={() => { setMenuOpen(false); document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }); }}>Services</a>
-          <a onClick={() => { setMenuOpen(false); document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }); }}>Location</a>
-          <a onClick={() => { setMenuOpen(false); document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }); }}>Contact</a>
+        </button>
+        <div className={`nav-links${menuOpen ? ' open' : ''}`} id="primary-nav-links">
+          <button type="button" className="nav-link-btn" onClick={() => scrollToSection('services')}>Services</button>
+          <a href={mapsUrl} target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>Location</a>
+          <button type="button" className="nav-link-btn" onClick={() => scrollToSection('contact')}>Contact</button>
         </div>
         <div className="nav-right">
-          <a className="btn-green" href={whatsappUrl} target="_blank" rel="noreferrer">
+          <a className="btn-green" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
             <MessageCircle size={16} />
             Book on WhatsApp
           </a>
-          <button className="nav-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
+          <button className="nav-toggle" type="button" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu" aria-expanded={menuOpen} aria-controls="primary-nav-links">
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </nav>
 
+      <main>
       {/* ─── HERO ─── */}
       <section className="hero">
         <div className="hero-bg-circle" style={{ width: '600px', height: '600px', right: '-200px', top: '-200px' }} />
@@ -207,16 +193,16 @@ export default function App() {
               <Sparkles size={14} />
               CSC Centre & Printing Agency • Sonwar, Srinagar
             </div>
-            <div className="hero-h1">Your one-stop for<br />CSC services, printing<br />&amp; <span className="hl">branding</span></div>
-            <div className="hero-desc">
-              Kashmir Expertise in Sonwar provides CSC digital services plus full printing, advertising, branding, and customized gift solutions — all locally near PIN 190001.
-            </div>
+            <h1 className="hero-h1">Your one-stop for<br />CSC services, printing<br />&amp; <span className="hl">branding</span></h1>
+            <p className="hero-desc">
+              Kashmir Expertise in Sonwar offers CSC digital services, printing, advertising, branding, and customized gifts from one trusted local counter near PIN 190001.
+            </p>
             <div className="hero-actions">
-              <button className="btn-primary" onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}>
+              <button className="btn-primary" type="button" onClick={() => scrollToSection('services')}>
                 View Services
                 <ArrowRight size={18} />
               </button>
-              <a className="btn-outline-white" href={whatsappUrl} target="_blank" rel="noreferrer">
+              <a className="btn-outline-white" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                 <MessageCircle size={18} />
                 Book on WhatsApp
               </a>
@@ -236,7 +222,10 @@ export default function App() {
               className="hero-img"
               src="https://images.unsplash.com/photo-1453928582365-b6ad33cbcf64?w=900&q=90&auto=format&fit=crop"
               alt="Kashmir Expertise — printing, advertising and design studio"
-              loading="lazy"
+              width="900"
+              height="675"
+              loading="eager"
+              decoding="async"
             />
           </div>
         </div>
@@ -261,10 +250,10 @@ export default function App() {
       </div>
 
       {/* ─── HOW IT WORKS ─── */}
-      <section className="sec sec-slate">
+      <section className="sec sec-slate" id="how-it-works">
         <div className="eyebrow eyebrow-saffron centered">How it works</div>
-        <div className="sec-h centered">Simple. Fast. Local.</div>
-        <div className="sec-p centered">From inquiry to delivery in three easy steps.</div>
+        <h2 className="sec-h centered">Simple. Fast. Local.</h2>
+        <p className="sec-p centered">From inquiry to delivery in three easy steps.</p>
         <div className="steps-grid">
           {processSteps.map((step, i) => {
             const Icon = step.icon;
@@ -272,8 +261,8 @@ export default function App() {
               <div className="step-card" key={step.title}>
                 <div className="step-num">0{i + 1}</div>
                 <div className="step-icon"><Icon size={22} /></div>
-                <div className="step-title">{step.title}</div>
-                <div className="step-desc">{step.text}</div>
+                <h3 className="step-title">{step.title}</h3>
+                <p className="step-desc">{step.text}</p>
               </div>
             );
           })}
@@ -283,16 +272,16 @@ export default function App() {
       {/* ─── SERVICES ─── */}
       <section className="sec sec-white" id="services">
         <div className="eyebrow eyebrow-saffron">Our services</div>
-        <div className="sec-h">Complete range of<br />CSC &amp; commercial services</div>
-        <div className="sec-p">From government CSC services to printing, advertising, branding, and customized gifts — all in one place.</div>
+        <h2 className="sec-h">Complete range of<br />CSC &amp; commercial services</h2>
+        <p className="sec-p">From government CSC services to printing, advertising, branding, and customized gifts — all in one place.</p>
         <div className="features-grid">
           {services.map((srv) => {
             const Icon = srv.icon;
             return (
               <div className="feat" key={srv.title}>
                 <div className="feat-ico feat-ico-saffron"><Icon size={20} /></div>
-                <div className="feat-t">{srv.title}</div>
-                <div className="feat-d">{srv.text}</div>
+                <h3 className="feat-t">{srv.title}</h3>
+                <p className="feat-d">{srv.text}</p>
               </div>
             );
           })}
@@ -302,18 +291,18 @@ export default function App() {
       {/* ─── TESTIMONIALS ─── */}
       <section className="sec sec-slate">
         <div className="eyebrow eyebrow-saffron centered">Testimonials</div>
-        <div className="sec-h centered">What our customers say</div>
-        <div className="sec-p centered">Real feedback from real people in Srinagar.</div>
+        <h2 className="sec-h centered">What our customers say</h2>
+        <p className="sec-p centered">Real feedback from real people in Srinagar.</p>
         <div className="tgrid">
           {reviews.map((t) => (
             <div className="tcard" key={t.name}>
               <div className="tcard-stars">
                 <Star size={14} /><Star size={14} /><Star size={14} /><Star size={14} /><Star size={14} />
               </div>
-              <div className="tcard-text">"{t.text}"</div>
+              <blockquote className="tcard-text">"{t.text}"</blockquote>
               <div className="tcard-user">
                 <div className="t-avatar" style={{ background: t.color }}>{t.initials}</div>
-                <div className="t-name">{t.name}</div>
+                <cite className="t-name">{t.name}</cite>
               </div>
             </div>
           ))}
@@ -321,22 +310,25 @@ export default function App() {
       </section>
 
       {/* ─── FAQ ─── */}
-      <section className="sec sec-white">
+      <section className="sec sec-white" id="faq">
         <div className="eyebrow eyebrow-saffron centered">FAQ</div>
-        <div className="sec-h centered">Common questions</div>
-        <div className="sec-p centered" style={{ marginBottom: 40 }}>Everything you need to know before visiting.</div>
+        <h2 className="sec-h centered">Common questions</h2>
+        <p className="sec-p centered" style={{ marginBottom: 40 }}>Everything you need to know before visiting.</p>
         <div className="faq-list">
           {faqs.map((f, i) => (
-            <div
-              className={`faq-item${faqOpen === i ? ' open' : ''}`}
-              key={i}
-              onClick={() => setFaqOpen(faqOpen === i ? null : i)}
-            >
-              <div className="faq-q">
+            <div className={`faq-item${faqOpen === i ? ' open' : ''}`} key={i}>
+              <button
+                className="faq-q"
+                type="button"
+                onClick={() => setFaqOpen(faqOpen === i ? null : i)}
+                aria-expanded={faqOpen === i}
+                aria-controls={`faq-panel-${i}`}
+                id={`faq-trigger-${i}`}
+              >
                 {f.q}
                 <ChevronDown size={18} />
-              </div>
-              <div className="faq-a">{f.a}</div>
+              </button>
+              <div className="faq-a" id={`faq-panel-${i}`} role="region" aria-labelledby={`faq-trigger-${i}`} hidden={faqOpen !== i}>{f.a}</div>
             </div>
           ))}
         </div>
@@ -346,8 +338,8 @@ export default function App() {
       <section className="sec sec-navy" id="contact">
         <div className="contact-grid">
           <div className="contact-info">
-            <div className="contact-h">Get in touch</div>
-            <div className="contact-p">Have a question or need a service? Reach out and we'll guide you through the process.</div>
+            <h2 className="contact-h">Get in touch</h2>
+            <p className="contact-p">Have a question or need a service? Reach out and we'll guide you through the process.</p>
             <div className="cinfo-row">
               <div className="cinfo-ico"><MapPinned size={18} /></div>
               <div>
@@ -372,30 +364,31 @@ export default function App() {
             <div className="cinfo-row">
               <div className="cinfo-ico"><Clock3 size={18} /></div>
               <div>
-                <div className="cinfo-k">Visit Note</div>
-                <div className="cinfo-v">We believe in transparency, quality, and timely delivery. Every project is handled with professionalism and a commitment to client success.</div>
+                <div className="cinfo-k">Service promise</div>
+                <div className="cinfo-v">Clear communication, reliable timelines, and quality work for every CSC request, print order, and branding project.</div>
               </div>
             </div>
           </div>
-          <div className="contact-form">
-            <div className="form-h">Send us a message</div>
+          <form className="contact-form" onSubmit={handleFormSubmit}>
+            <h3 className="form-h">Send us a message</h3>
             <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 22, lineHeight: 1.6 }}>
-              Prefer WhatsApp? Use the button above for fastest response. Otherwise fill this form (demo).
+              Prefer WhatsApp? Use the button above for the fastest response. Or fill this form and we will prepare the WhatsApp message for you.
             </p>
             <div className="form-row">
-              <div className="form-group"><label className="form-label">First name</label><input className="form-input" placeholder="Your name" type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
-              <div className="form-group"><label className="form-label">Phone</label><input className="form-input" placeholder="+91 xxxx xxx xxx" type="text" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label" htmlFor={nameId}>Name</label><input className="form-input" id={nameId} name="name" autoComplete="name" placeholder="Your full name" type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label" htmlFor={phoneId}>Phone</label><input className="form-input" id={phoneId} name="phone" autoComplete="tel" placeholder="+91 xxxx xxx xxx" type="tel" inputMode="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
             </div>
-            <div className="form-group"><label className="form-label">Service needed</label>
-              <input className="form-input" placeholder="e.g. Aadhaar update, bill book printing, flex banner..." type="text" value={form.service} onChange={e => setForm({ ...form, service: e.target.value })} />
+            <div className="form-group"><label className="form-label" htmlFor={serviceId}>Service needed</label>
+              <input className="form-input" id={serviceId} name="service" placeholder="e.g. Aadhaar update, bill book printing, flex banner..." type="text" value={form.service} onChange={e => setForm({ ...form, service: e.target.value })} />
             </div>
-            <div className="form-group"><label className="form-label">Message</label>
-              <textarea className="form-textarea" placeholder="Tell us what you need and when you'd like to visit..." value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} />
+            <div className="form-group"><label className="form-label" htmlFor={messageId}>Message</label>
+              <textarea className="form-textarea" id={messageId} name="message" placeholder="Tell us what you need and when you'd like to visit..." value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} />
             </div>
-            <button className="submit-btn" onClick={handleFormSubmit}><Send size={16} /> Send Message</button>
-          </div>
+            <button className="submit-btn" type="submit"><Send size={16} /> Send Message</button>
+          </form>
         </div>
       </section>
+      </main>
 
       {/* ─── FOOTER ─── */}
       <footer className="footer">
@@ -405,38 +398,38 @@ export default function App() {
               <div className="logo-mark"><Building2 size={16} /></div>
               Kashmir <em>Expertise</em>
             </div>
-            <div className="footer-tagline">CSC Centre & Printing Service — your local hub for digital services, printing, advertising, branding, and customized gifts in Sonwar, Srinagar.</div>
+            <div className="footer-tagline">Your local Sonwar hub for CSC digital services, printing, advertising, branding, and customized gifts in Srinagar.</div>
             <div className="footer-socials">
-              <a className="fsoc" href={whatsappUrl} target="_blank" rel="noreferrer" aria-label="WhatsApp"><MessageCircle size={16} /></a>
+              <a className="fsoc" href={whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><MessageCircle size={16} /></a>
               <a className="fsoc" href="mailto:kashmirexpertise@gmail.com" aria-label="Email"><Mail size={16} /></a>
-              <a className="fsoc" href="https://www.google.com/maps/search/?api=1&query=Palpora+Sonwar+Srinagar+190001" target="_blank" rel="noreferrer" aria-label="Google Maps"><MapPinned size={16} /></a>
+               <a className="fsoc" href={mapsUrl} target="_blank" rel="noopener noreferrer" aria-label="Google Maps"><MapPinned size={16} /></a>
             </div>
           </div>
           <div>
             <div className="footer-col-title">Services</div>
-            <div className="footer-links"><a>CSC digital services</a><a>Printing</a><a>Advertising</a><a>Branding</a><a>Customized gifts</a></div>
+             <div className="footer-links"><button type="button" className="footer-link-btn" onClick={() => scrollToSection('services')}>CSC digital services</button><button type="button" className="footer-link-btn" onClick={() => scrollToSection('services')}>Printing</button><button type="button" className="footer-link-btn" onClick={() => scrollToSection('services')}>Advertising</button><button type="button" className="footer-link-btn" onClick={() => scrollToSection('services')}>Branding</button><button type="button" className="footer-link-btn" onClick={() => scrollToSection('services')}>Customized gifts</button></div>
           </div>
           <div>
             <div className="footer-col-title">Location</div>
             <div className="footer-links">
-              {locations.map(([k, v]) => <a key={k}><strong style={{ color: 'rgba(255,255,255,0.4)' }}>{k}:</strong> {v}</a>)}
+              {locations.map(([k, v]) => <p key={k} className="footer-meta"><strong style={{ color: 'rgba(255,255,255,0.4)' }}>{k}:</strong> {v}</p>)}
             </div>
           </div>
           <div>
-            <div className="footer-col-title">Quick Links</div>
-            <div className="footer-links">
-              <a>How it works</a>
-              <a>FAQs</a>
-              <a>WhatsApp booking</a>
-              <a>Google Maps</a>
+             <div className="footer-col-title">Quick Links</div>
+             <div className="footer-links">
+               <button type="button" className="footer-link-btn" onClick={() => scrollToSection('how-it-works')}>How it works</button>
+               <button type="button" className="footer-link-btn" onClick={() => scrollToSection('faq')}>FAQs</button>
+               <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">WhatsApp booking</a>
+               <a href={mapsUrl} target="_blank" rel="noopener noreferrer">Google Maps</a>
+              </div>
             </div>
-          </div>
         </div>
         <div className="footer-bottom">
-          <div className="footer-copy">© 2025 Kashmir Expertise CSC Centre. All rights reserved.</div>
+          <div className="footer-copy">© 2026 Kashmir Expertise CSC Centre. All rights reserved.</div>
           <div className="footer-legal">
-            <a>Privacy Policy</a>
-            <a>Terms of Service</a>
+            <span>Privacy Policy</span>
+            <span>Terms of Service</span>
           </div>
         </div>
       </footer>
